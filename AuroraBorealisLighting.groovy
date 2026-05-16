@@ -125,6 +125,12 @@ def initialize() {
     }
     state.auroraActive = false
     state.auroraFirstCyclePrime = true
+    
+    // Explicitly purge stale color memories on initialization
+    state.auroraBaseHue = null
+    state.auroraBaseSat = null
+    state.auroraStep = 0
+    state.auroraOrder = null
 }
 
 void handleButtonEvent(evt, actionKey, numberKey, isStart) {
@@ -239,8 +245,9 @@ def auroraLoop() {
         randomOrder = state.auroraOrder.collect { id -> bulbs.find{ it.id == id } }.findAll{ it }
     }
 
+    def theme = settings.colorScheme ?: "Aurora Borealis"
+
     if (state.auroraBaseHue == null || state.auroraBaseSat == null) {
-        def theme = settings.colorScheme ?: "Aurora Borealis"
         switch(theme) {
             case "Chinatown":
                 state.auroraBaseHue = 0 
@@ -279,7 +286,7 @@ def auroraLoop() {
                 state.auroraBaseSat = 100
                 break
             case "Blue Monday":
-                state.auroraBaseHue = 62 // Pure blue baseline
+                state.auroraBaseHue = 62 
                 state.auroraBaseSat = 95
                 break
             case "Aurora Borealis":
@@ -293,13 +300,17 @@ def auroraLoop() {
     def rawLevel = settings.auroraLevel ?: 100
     def baseLevel = Math.max(1, Math.min(100, rawLevel as Integer))
 
+    // Armored initialization values to completely stop stale data bleed
+    def primeHue = (theme == "Blue Monday") ? 62 : state.auroraBaseHue
+    def primeSat = (theme == "Blue Monday") ? 95 : state.auroraBaseSat
+
     if (step == 0) {
         if (state.auroraStarted && state.auroraFirstCyclePrime != false) {
             bulbs.each { bulb ->
                 try {
                     suppressEventsFor(bulb)
-                    setLastHue(bulb, state.auroraBaseHue as Double)
-                    bulb.setColor([hue: state.auroraBaseHue, saturation: state.auroraBaseSat, level: baseLevel])
+                    setLastHue(bulb, primeHue as Double)
+                    bulb.setColor([hue: primeHue, saturation: primeSat, level: baseLevel])
                 } catch (e) {
                     debugLog "setColor failed during prime for ${bulb.displayName}: ${e}"
                 }
@@ -310,7 +321,6 @@ def auroraLoop() {
 
     if (step < randomOrder.size()) {
         def bulb = randomOrder[step]
-        def theme = settings.colorScheme ?: "Aurora Borealis"
         
         // Armored fallback values setup explicitly before execution blocks
         def targetHue = (theme == "Blue Monday") ? 62 : state.auroraBaseHue
