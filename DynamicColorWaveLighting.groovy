@@ -1,32 +1,32 @@
 /**
- *  Dynamic Color Wave Lighting
+ * Dynamic Color Wave Lighting
  *
- *  Copyright 2026
+ * Copyright 2026
  *
- *  =================================================================================
- *  AVAILABLE COLOR SCHEMES & DESCRIPTIONS:
- *  =================================================================================
- *  * Aurora Borealis        - Cool greens, shifting teals, and occasional indigo/violet accents.
- *  * Chinatown              - Deep striking reds, rich golds, and warm oranges cycling in waves.
- *  * Ember & Hearth         - Slow amber-orange candle-like glow with structural flame flicker.
- *  * Ocean Drift            - Calm aquamarine and sapphire deep blues shifting gently like water.
- *  * Candlelight            - Ultra-warm white-to-gold tones with a delicate fluttering candle glow.
- *  * Enchanted Forest       - Deep rich forest greens intertwined with dark, immersive woodland purples.
- *  * Synthwave              - Retro hot pink, electric purple, and vibrant neon cyan pulses.
- *  * Pride ROYGBIV          - Vividly cycles sequentially through full Red, Orange, Yellow, Green, Blue, Violet.
- *  * Japanese Cherry Blossom- Soft, elegant pastel pinks, snowy whites, and rose-tinted blossom tones.
- *  * Primary Colors         - Direct, punchy alternation between pure Red, pure Blue, and pure Yellow.
- *  * Blue Monday            - Moody, shifting layers of rich blues, ranging from crisp electric ice to deep midnight tones.
- *  =================================================================================
+ * =================================================================================
+ * AVAILABLE COLOR SCHEMES & DESCRIPTIONS:
+ * =================================================================================
+ * * Aurora Borealis        - Cool greens, shifting teals, and occasional indigo/violet accents.
+ * * Chinatown              - Deep striking reds, rich golds, and warm oranges cycling in waves.
+ * * Ember & Hearth         - Slow amber-orange candle-like glow with structural flame flicker.
+ * * Ocean Drift            - Calm aquamarine and sapphire deep blues shifting gently like water.
+ * * Candlelight            - Ultra-warm white-to-gold tones with a delicate fluttering candle glow.
+ * * Enchanted Forest       - Deep rich forest greens intertwined with dark, immersive woodland purples.
+ * * Synthwave              - Retro hot pink, electric purple, and vibrant neon cyan pulses.
+ * * Pride ROYGBIV          - Vividly cycles sequentially through full Red, Orange, Yellow, Green, Blue, Violet.
+ * * Japanese Cherry Blossom- Soft, elegant pastel pinks, snowy whites, and rose-tinted blossom tones.
+ * * Primary Colors         - Direct, punchy alternation between pure Red, pure Blue, and pure Yellow.
+ * * Blue Monday            - Moody, shifting layers of rich blues, ranging from crisp electric ice to deep midnight tones.
+ * =================================================================================
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at:
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at:
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
- *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
- *  for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ * for the specific language governing permissions and limitations under the License.
  *
  */
 
@@ -36,7 +36,7 @@ definition(
     name: "Dynamic Color Wave Lighting",
     namespace: "custom",
     author: "RichRich2112",
-    description: "Simulates shifting ambient environments by cycling colors on selected color bulbs.",
+    description: "Simulates shifting ambient environments by cycling colors on selected color bulbs with a built-in hot-reload theme cycler.",
     category: "Lighting",
     iconUrl: "",
     iconX2Url: "",
@@ -77,15 +77,16 @@ preferences {
     section("Start/Stop Control (Switch)") {
         input "controlSwitch", "capability.switch", title: "Switch to Start/Stop Effect (optional)", required: false, multiple: false
     }
-    section("Start Control (Button)") {
-        input "startButtonDevice", "capability.pushableButton", title: "Button Device to Start Effect (optional)", required: false, multiple: false
-        input "startButtonNumber", "number", title: "Button Number", required: false, defaultValue: 1
-        input "startButtonAction", "enum", title: "Button Action", options: ["pushed", "held", "doubleTapped"], required: false, defaultValue: "pushed"
+    section("Start & Theme Cycle Control (Button)") {
+        input "startButtonDevice", "capability.pushableButton", title: "Button Device to Control Effect (optional)", required: false, multiple: false
+        input "startButtonNumber", "number", title: "Button Number to Start", required: false, defaultValue: 1
+        input "startButtonAction", "enum", title: "Button Action to Start", options: ["pushed", "held", "doubleTapped"], required: false, defaultValue: "pushed"
+        input "cycleButtonNumber", "number", title: "Button Number to Cycle Themes (Hold)", required: false, defaultValue: 1
     }
     section("Stop Control (Button)") {
         input "stopButtonDevice", "capability.pushableButton", title: "Button Device to Stop Effect (optional)", required: false, multiple: false
-        input "stopButtonNumber", "number", title: "Button Number", required: false, defaultValue: 1
-        input "stopButtonAction", "enum", title: "Button Action", options: ["pushed", "held", "doubleTapped"], required: false, defaultValue: "pushed"
+        input "stopButtonNumber", "number", title: "Button Number to Stop", required: false, defaultValue: 1
+        input "stopButtonAction", "enum", title: "Button Action to Stop", options: ["pushed", "held", "doubleTapped"], required: false, defaultValue: "pushed"
     }
 }
 
@@ -111,6 +112,8 @@ def initialize() {
     }
     if (startButtonDevice && startButtonAction && startButtonNumber) {
         subscribe(startButtonDevice, startButtonAction, onButtonEvent)
+        // Ensure app explicitly listens for the held action on our primary button device
+        subscribe(startButtonDevice, "held", onButtonEvent)
     }
     if (stopButtonDevice && stopButtonAction && stopButtonNumber) {
         subscribe(stopButtonDevice, stopButtonAction, onStopButtonEvent)
@@ -155,7 +158,54 @@ void handleButtonEvent(evt, actionKey, numberKey, isStart) {
         eventBtnNum = 1
         debugLog "Exception parsing button number: ${e}"
     }
+    
+    // Logic implementation: Intercept Hold action on designated cycle button mid-animation loop
+    if (isStart && eventAction == "held" && eventBtnNum == (settings.cycleButtonNumber?.toInteger() ?: 1)) {
+        if (state.auroraActive) {
+            log.info "Theme cycle event matched via button hold."
+            
+            // Hardcoded list matching your exact preferences options to bypass App API limitations
+            def themeList = [
+                "Aurora Borealis", 
+                "Chinatown", 
+                "Ember & Hearth", 
+                "Ocean Drift", 
+                "Candlelight", 
+                "Enchanted Forest", 
+                "Synthwave",
+                "Pride ROYGBIV",
+                "Japanese Cherry Blossom",
+                "Primary Colors",
+                "Blue Monday"
+            ]
+            
+            def currentIndex = themeList.indexOf(settings.colorScheme)
+            // If for some reason it can't find it, default to index 0
+            if (currentIndex == -1) currentIndex = 0
+            
+            def nextIndex = (currentIndex + 1) % themeList.size()
+            def nextTheme = themeList[nextIndex]
+            
+            log.info "Cycling profile preference from '${settings.colorScheme}' to '${nextTheme}'"
+            app.updateSetting("colorScheme", [type: "enum", value: nextTheme])
+            
+            // Rapid recalculation: Clear current pacing metrics but keep original saved baseline states safe
+            unschedule()
+            state.auroraStep = 0
+            state.auroraOrder = null
+            state.auroraBaseHue = null
+            state.auroraBaseSat = null
+            
+            auroraLoop()
+        } else {
+            debugLog "Theme cycle requested via hold, but animation loop is currently stopped. Ignoring."
+        }
+        return
+    }
+
     if (settings.enableDebugLogging) log.debug "Comparing eventAction=${eventAction} to action=${action}, eventBtnNum=${eventBtnNum} to btnNum=${btnNum}"
+    
+    // Fall back to standard Start/Stop button event checking
     if (eventAction == action && eventBtnNum == btnNum) {
         if (isStart) {
             debugLog "Button event matched, starting animation."
