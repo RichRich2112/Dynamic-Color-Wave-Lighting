@@ -191,7 +191,7 @@ void handleButtonEvent(evt, actionKey, numberKey, isStart) {
             
             // Push notification logic wrapper
             if (notificationDevice) {
-                notificationDevice.deviceNotification("Aurora Wave changed theme to: ${nextTheme}")
+                notificationDevice.deviceNotification("Dynamic Wave Lighting changed to: ${nextTheme}")
             }
             
             // Rapid recalculation: Clear current pacing metrics but keep original saved baseline states safe
