@@ -36,7 +36,7 @@ definition(
     name: "Dynamic Color Wave Lighting",
     namespace: "custom",
     author: "RichRich2112",
-    description: "Simulates shifting ambient environments by cycling colors on selected color bulbs with a built-in hot-reload theme cycler.",
+    description: "Simulates shifting ambient environments by cycling colors on Z-Wave, Zigbee, and Matter RGBW bulbs. Supports button-hold theme switching and mobile push notifications.",
     category: "Lighting",
     iconUrl: "",
     iconX2Url: "",
@@ -82,6 +82,7 @@ preferences {
         input "startButtonNumber", "number", title: "Button Number to Start", required: false, defaultValue: 1
         input "startButtonAction", "enum", title: "Button Action to Start", options: ["pushed", "held", "doubleTapped"], required: false, defaultValue: "pushed"
         input "cycleButtonNumber", "number", title: "Button Number to Cycle Themes (Hold)", required: false, defaultValue: 1
+        input "notificationDevice", "capability.notification", title: "Send theme change notification to this device (optional)", required: false, multiple: true
     }
     section("Stop Control (Button)") {
         input "stopButtonDevice", "capability.pushableButton", title: "Button Device to Stop Effect (optional)", required: false, multiple: false
@@ -164,7 +165,7 @@ void handleButtonEvent(evt, actionKey, numberKey, isStart) {
         if (state.auroraActive) {
             log.info "Theme cycle event matched via button hold."
             
-            // Hardcoded list matching your exact preferences options to bypass App API limitations
+            // Hardcoded static tracker to prevent driver-exclusive getSettingDefinition missing method errors
             def themeList = [
                 "Aurora Borealis", 
                 "Chinatown", 
@@ -180,7 +181,6 @@ void handleButtonEvent(evt, actionKey, numberKey, isStart) {
             ]
             
             def currentIndex = themeList.indexOf(settings.colorScheme)
-            // If for some reason it can't find it, default to index 0
             if (currentIndex == -1) currentIndex = 0
             
             def nextIndex = (currentIndex + 1) % themeList.size()
@@ -188,6 +188,11 @@ void handleButtonEvent(evt, actionKey, numberKey, isStart) {
             
             log.info "Cycling profile preference from '${settings.colorScheme}' to '${nextTheme}'"
             app.updateSetting("colorScheme", [type: "enum", value: nextTheme])
+            
+            // Push notification logic wrapper
+            if (notificationDevice) {
+                notificationDevice.deviceNotification("Aurora Wave changed theme to: ${nextTheme}")
+            }
             
             // Rapid recalculation: Clear current pacing metrics but keep original saved baseline states safe
             unschedule()
