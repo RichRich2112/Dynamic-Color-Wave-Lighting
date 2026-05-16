@@ -1,7 +1,7 @@
 /**
  * Dynamic Color Wave Lighting
  *
- * Copyright 2026
+ * May 16, 2026
  *
  * =================================================================================
  * AVAILABLE COLOR SCHEMES & DESCRIPTIONS:
