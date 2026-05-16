@@ -1,16 +1,17 @@
 # Dynamic Color Wave Lighting for Hubitat
 
-An advanced ambient lighting application for the Hubitat Elevation platform. This app creates immersive, shifting environments by dynamically cycling coordinated color profiles across your selected smart bulbs with smooth wave transitions.
+An advanced ambient lighting application for the Hubitat Elevation platform. This app creates immersive, shifting environments by dynamically cycling coordinated color profiles across your selected smart bulbs with smooth wave transitions. 
 
-It features robust event suppression to filter out self-generated Z-Wave/Zigbee commands, an optional state capture/restore machine, and physical button controllers to easily trigger or cancel the effects.
+It is designed to work seamlessly with **Z-Wave, Zigbee, and Matter RGBW bulbs**. It features robust event suppression to filter out self-generated commands across all protocols, an optional state capture/restore machine, and physical button controllers to easily trigger or cancel the effects.
 
 ## Features
 
-*   **10 Curated Color Profiles:** Instantly shift the mood with everything from natural atmospheric cycles to vibrant reactive palettes.
-*   **Intelligent State Recovery:** Captures the exact state of your bulbs before an effect starts (including Power, Hue, Saturation, Level, and Color Temperature) and gracefully restores them when stopped.
-*   **External Override Protection:** Automatically stops the animation loop if a user manually turns off a bulb, adjustments the physical switch, or changes the color configuration via a dashboard or physical controller.
-*   **Granular Timing Control:** Configure the individual bulb transition intervals and overall cycle pause durations to fine-tune the speed of the wave.
-*   **Dual Activation Methods:** Run the loop via an integrated master virtual/physical switch or map it directly to push/hold/double-tap events on a button controller.
+* **10 Curated Color Profiles:** Instantly shift the mood with everything from natural atmospheric cycles to vibrant reactive palettes.
+* **Intelligent State Recovery:** Captures the exact state of your bulbs before an effect starts (including Power, Hue, Saturation, Level, and Color Temperature) and gracefully restores them when stopped.
+* **Multi-Protocol Event Suppression:** Filters out self-generated Z-Wave, Zigbee, and Matter status updates to keep the hub running smoothly during rapid transitions.
+* **External Override Protection:** Automatically stops the animation loop if a user manually turns off a bulb, adjusts the physical switch, or changes the color configuration via a dashboard or physical controller.
+* **Granular Timing Control:** Configure the individual bulb transition intervals and overall cycle pause durations to fine-tune the speed of the wave.
+* **Dual Activation Methods:** Run the loop via an integrated master virtual/physical switch or map it directly to push/hold/double-tap events on a button controller.
 
 ---
 
@@ -45,15 +46,15 @@ It features robust event suppression to filter out self-generated Z-Wave/Zigbee 
 
 ## Configuration
 
-*   **Color Bulbs:** Choose the target `capability.colorControl` devices you want included in the effect. Unselected color bulbs on the network will automatically turn off when the loop activates to maintain ambient immersion.
-*   **Theme Configuration:** Select your active profile.
-*   **Set a bulb every (seconds):** The delay between updating individual bulbs in the sequence. Lower numbers make the "wave" move faster across your room.
-*   **Then pause (seconds):** The wait time after an entire wave has rolled through before shuffling the device order and firing the next wave.
-*   **Base Effect Brightness:** Sets the ceiling level (1-100%) for the bulbs. Profiles like *Candlelight* and *Ember & Hearth* will dynamically scale below this number to simulate physical flickering.
+* **Color Bulbs:** Choose the target `capability.colorControl` devices (Z-Wave, Zigbee, or Matter RGBW) you want included in the effect. Unselected color bulbs on the network will automatically turn off when the loop activates to maintain ambient immersion.
+* **Theme Configuration:** Select your active profile.
+* **Set a bulb every (seconds):** The delay between updating individual bulbs in the sequence. Lower numbers make the "wave" move faster across your room.
+* **Then pause (seconds):** The wait time after an entire wave has rolled through before shuffling the device order and firing the next wave.
+* **Base Effect Brightness:** Sets the ceiling level (1-100%) for the bulbs. Profiles like *Candlelight* and *Ember & Hearth* will dynamically scale below this number to simulate physical flickering.
 
 ### Automated Triggers (Optional)
-*   **Switch Control:** Associating a switch will activate the wave when turned **On** (and capture current lighting states). Turning it **Off** stops the animation and shuts down all selected fixtures.
-*   **Button Control:** Specify a button device, action (pushed, held, doubleTapped), and target button number to trigger or terminate the sequence independently.
+* **Switch Control:** Associating a switch will activate the wave when turned **On** (and capture current lighting states). Turning it **Off** stops the animation and shuts down all selected fixtures.
+* **Button Control:** Specify a button device, action (pushed, held, doubleTapped), and target button number to trigger or terminate the sequence independently.
 
 ---
 
@@ -61,8 +62,8 @@ It features robust event suppression to filter out self-generated Z-Wave/Zigbee 
 
 ### Self-Looping Execution Architecture
 The app manages asynchronous iteration across your devices utilizing sequential hardware scheduling commands:
-*   `runInMillis()` manages internal bulb propagation steps to keep transitions tightly grouped.
-*   `runIn()` handles the macro-level loop cycle delays to optimize Hubitat hub processing overhead.
+* `runInMillis()` manages internal bulb propagation steps to keep transitions tightly grouped.
+* `runIn()` handles the macro-level loop cycle delays to optimize Hubitat hub processing overhead.
 
 ### Smart Intercept Logic
 To prevent local mesh congestion or infinite rule loops, the driver includes an ephemeral event suppression layer (`state.auroraSuppressEventsUntil`). When the application actively pushes a hardware state modification to a bulb, it briefly mutes inbound event responses from that specific device network ID. If a user manually overrides a bulb's color profile outside of the application window, the rule intercepts the event and safely invokes `stopAll()`.
