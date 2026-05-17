@@ -4,6 +4,8 @@ An advanced ambient lighting application for the Hubitat Elevation platform. Thi
 
 It is designed to work seamlessly with **Z-Wave, Zigbee, and Matter RGBW bulbs**. It features robust event suppression to filter out self-generated commands across all protocols, an optional state capture/restore machine, physical or virtual button controllers to easily trigger or cancel the effects, and dynamic theme cycling via button holds with mobile push notifications.
 
+**Note:** I'm using Linkind LS01018-RGBTW-WB-US bulbs. You may need to tweak the color numbers for hue, saturation, etc if your bulbs are not displaying the schemes to your satisfaction.
+
 ## Features
 
 * **11 Curated Color Profiles:** Instantly shift the mood with everything from natural atmospheric cycles to vibrant reactive palettes.
