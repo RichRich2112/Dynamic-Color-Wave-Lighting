@@ -7,8 +7,8 @@ It is designed to work seamlessly with **Z-Wave, Zigbee, and Matter RGBW bulbs**
 ## Features
 
 * **11 Curated Color Profiles:** Instantly shift the mood with everything from natural atmospheric cycles to vibrant reactive palettes.
-* **On-the-Fly Theme Cycling:** Hold a designated button on your physical controller mid-loop to immediately hop to the next color profile without stopping the active wave.
-* **Mobile Push Notifications:** Instantly sends a push alert via the Hubitat mobile app to your phone whenever a theme is cycled, keeping you informed of the active state.
+* **On-the-Fly Theme Cycling:** Hold a designated button on a physical or virtual button controller, mid-loop, to immediately hop to the next color profile without stopping the active wave.
+* **Mobile Push Notifications:** In-app UI option: Instantly sends a push alert via the Hubitat mobile app to your phone whenever a theme is cycled, keeping you informed of the active state.
 * **Intelligent State Recovery:** Captures the exact state of your bulbs before an effect starts (including Power, Hue, Saturation, Level, and Color Temperature) and gracefully restores them when stopped.
 * **Multi-Protocol Event Suppression:** Filters out self-generated Z-Wave, Zigbee, and Matter status updates to keep the hub running smoothly during rapid transitions.
 * **External Override Protection:** Automatically stops the animation loop if a user manually turns off a bulb, adjusts the physical switch, or changes the color configuration via a dashboard or physical controller.
