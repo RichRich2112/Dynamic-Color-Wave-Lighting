@@ -238,8 +238,19 @@ def onBulbStateChange(evt) {
     }
     def lastHueMap = state.auroraLastHue ?: [:]
     if (evt.name == 'switch' && evt.value == 'off') {
-        debugLog "Bulb turned off externally (${evt.device.displayName}), aborting."
-        stopAll()
+        debugLog "Bulb ${evt.device.displayName} reported OFF or cut power."
+        
+        // Count how many selected bulbs are still physically reporting as 'on'
+        def bulbsOn = colorBulbs.count { it.currentSwitch == "on" }
+        debugLog "Active tracking check: ${bulbsOn} out of ${colorBulbs.size()} bulbs remain on."
+        
+        if (bulbsOn == 0) {
+            log.info "All bulbs are off. Fully shutting down automation loop cleanly."
+            stopAll()
+        } else {
+            log.info "A bulb cut power, but ${bulbsOn} bulbs are still active. Continuing wave on remaining devices."
+            // The loop will automatically bypass unresponsive devices on the next cycle iteration
+        }
         return
     }
     if (evt.name == 'switch' && evt.value == 'on') {
